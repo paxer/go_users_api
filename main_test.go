@@ -266,3 +266,41 @@ func Test_UserDeleteRoute(t *testing.T) {
 		t.Errorf("Expected body to be empty JSON, got %s", w.Body.String())
 	}
 }
+
+func Test_GetAllUsersRoute(t *testing.T) {
+	db := setupDB()
+	defer db.Close()
+
+	userFromDb, _ := models.NewUser("Luke Skywalker", "luke@skywalker.com")
+	userFromDb.Create()
+
+	router := setupRouter()
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/users", nil)
+	router.ServeHTTP(w, req)
+
+	if w.Code != 200 {
+		t.Errorf("Expected code 200 got %d", w.Code)
+	}
+
+	users := []models.User{}
+	json.Unmarshal([]byte(w.Body.String()), &users)
+
+	if len(users) != 1 {
+		t.Errorf("Expected one user to be returned got %d", len(users))
+	}
+
+	if users[0].ID != userFromDb.ID {
+		t.Error("Expected found and unmarshaled users to be the same")
+	}
+
+	if !strings.HasPrefix(w.Body.String(), "[{") {
+		t.Errorf("Expected body to be json array got %s", w.Body.String())
+	}
+
+	if !strings.Contains(w.Body.String(), "\"name\":\"Luke Skywalker\",\"email\":\"luke@skywalker.com\"") {
+		t.Errorf("Expected body to be json got %s", w.Body.String())
+	}
+
+	db.Delete(&userFromDb)
+}

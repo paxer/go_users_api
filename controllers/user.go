@@ -74,3 +74,9 @@ func DeleteUser(c *gin.Context) {
 	user.Delete()
 	c.JSON(http.StatusOK, gin.H{})
 }
+
+// ShowUsers handles HTTP GET request to return all User records
+func ShowUsers(c *gin.Context) {
+	users := models.GetAllUsers()
+	c.JSON(http.StatusOK, users)
+}

@@ -37,6 +37,13 @@ func FindUserByID(id int) *User {
 	return &user
 }
 
+// GetAllUsers returns all User records
+func GetAllUsers() *[]User {
+	var users []User
+	DB.Find(&users)
+	return &users
+}
+
 // Create creates a new User record in the database
 func (u *User) Create() {
 	DB.NewRecord(u)
