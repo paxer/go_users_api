@@ -1,6 +1,9 @@
 package models
 
-import "time"
+import (
+	"errors"
+	"time"
+)
 
 // User model, use NewUser to create a new instance
 type User struct {
@@ -12,8 +15,19 @@ type User struct {
 }
 
 // NewUser creates a new User{} instance
-func NewUser(name string, email string) *User {
-	return &User{Name: name, Email: email}
+func NewUser(name string, email string) (*User, error) {
+	var err error
+	if name == "" {
+		err = errors.New("name can not be blank")
+		return nil, err
+	}
+
+	if email == "" {
+		err = errors.New("email can not be blank")
+		return nil, err
+	}
+
+	return &User{Name: name, Email: email}, err
 }
 
 // Create creates a new User record in the database
