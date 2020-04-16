@@ -34,3 +34,25 @@ func ShowUser(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, user)
 }
+
+// UpdateUser handles HTTP PATCH request to find and update User details
+func UpdateUser(c *gin.Context) {
+	idParam := c.Param("id")
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	user := models.FindUserByID(id)
+	if user.ID == 0 {
+		c.JSON(http.StatusNotFound, gin.H{})
+		return
+	}
+
+	if err := c.ShouldBindJSON(&user); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	user.Update()
+	c.JSON(http.StatusOK, user)
+}

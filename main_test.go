@@ -111,3 +111,96 @@ func Test_UserGetRouteWhenIdIncorrect(t *testing.T) {
 		t.Error("Expected body to be have error json")
 	}
 }
+
+func Test_UserGetRouteWhenIdNotFound(t *testing.T) {
+	db := setupDB()
+	defer db.Close()
+	router := setupRouter()
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/users/7822345", nil)
+	router.ServeHTTP(w, req)
+
+	if w.Code != 404 {
+		t.Errorf("Expected code 404 got %d", w.Code)
+	}
+
+	if w.Body.String() != "{}" {
+		t.Errorf("Expected body to be empty JSON, got %s", w.Body.String())
+	}
+}
+
+func Test_UserUpdateRoute(t *testing.T) {
+	db := setupDB()
+	defer db.Close()
+
+	user, _ := models.NewUser("Luke Skywalker", "luke@skywalker.com")
+	user.Create()
+
+	router := setupRouter()
+	w := httptest.NewRecorder()
+	var updatedUserJSON = []byte(`{"name":"Darth Vader", "email": "darth@vader.com"}`)
+	req, _ := http.NewRequest("PATCH", fmt.Sprintf("/users/%d", user.ID), bytes.NewBuffer(updatedUserJSON))
+	router.ServeHTTP(w, req)
+
+	if w.Code != 200 {
+		t.Errorf("Expected code 200 got %d", w.Code)
+	}
+
+	userResp := models.User{}
+	json.Unmarshal([]byte(w.Body.String()), &userResp)
+
+	var userFromDb models.User
+	db.First(&userFromDb)
+
+	if userFromDb.Name != "Darth Vader" {
+		t.Errorf("Expected Name to be updated but got %s", userFromDb.Name)
+	}
+
+	if userFromDb.Email != "darth@vader.com" {
+		t.Errorf("Expected Email to be updated but got %s", userFromDb.Email)
+	}
+
+	if userResp.ID != userFromDb.ID {
+		t.Error("Expected updated and unmarshaled users to be the same")
+	}
+
+	if !strings.Contains(w.Body.String(), "\"name\":\"Darth Vader\",\"email\":\"darth@vader.com\"") {
+		t.Errorf("Expected body to be json got %s", w.Body.String())
+	}
+
+	db.Delete(&user)
+}
+
+func Test_UserUpdateRouteWhenIdNotFound(t *testing.T) {
+	db := setupDB()
+	defer db.Close()
+	router := setupRouter()
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("PATCH", "/users/7822345", nil)
+	router.ServeHTTP(w, req)
+
+	if w.Code != 404 {
+		t.Errorf("Expected code 404 got %d", w.Code)
+	}
+
+	if w.Body.String() != "{}" {
+		t.Errorf("Expected body to be empty JSON, got %s", w.Body.String())
+	}
+}
+
+func Test_UserUpdateRouteWhenIdInvalid(t *testing.T) {
+	db := setupDB()
+	defer db.Close()
+	router := setupRouter()
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("PATCH", "/users/foo", nil)
+	router.ServeHTTP(w, req)
+
+	if w.Code != 400 {
+		t.Errorf("Expected code 400 got %d", w.Code)
+	}
+
+	if !strings.HasPrefix(w.Body.String(), "{\"error\":") {
+		t.Error("Expected body to be have error json")
+	}
+}

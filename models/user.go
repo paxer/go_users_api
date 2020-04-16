@@ -42,3 +42,8 @@ func (u *User) Create() {
 	DB.NewRecord(u)
 	DB.Create(&u)
 }
+
+// Update updates User record attributes in the database
+func (u *User) Update() {
+	DB.Model(&u).Updates(User{Name: u.Name, Email: u.Email})
+}
