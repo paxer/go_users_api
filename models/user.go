@@ -30,6 +30,13 @@ func NewUser(name string, email string) (*User, error) {
 	return &User{Name: name, Email: email}, err
 }
 
+// FindUserByID finds User by id and return
+func FindUserByID(id int) *User {
+	var user User
+	DB.First(&user, id)
+	return &user
+}
+
 // Create creates a new User record in the database
 func (u *User) Create() {
 	DB.NewRecord(u)

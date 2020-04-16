@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"go_users_api/models"
 	"net/http"
 	"net/http/httptest"
@@ -64,4 +65,49 @@ func Test_UsersPostRoute(t *testing.T) {
 	}
 
 	db.Delete(&user)
+}
+
+func Test_UserGetRoute(t *testing.T) {
+	db := setupDB()
+	defer db.Close()
+
+	userFromDb, _ := models.NewUser("Luke Skywalker", "luke@skywalker.com")
+	userFromDb.Create()
+
+	router := setupRouter()
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", fmt.Sprintf("/users/%d", userFromDb.ID), nil)
+	router.ServeHTTP(w, req)
+
+	if w.Code != 200 {
+		t.Errorf("Expected code 200 got %d", w.Code)
+	}
+
+	user := models.User{}
+	json.Unmarshal([]byte(w.Body.String()), &user)
+
+	if userFromDb.ID != user.ID {
+		t.Error("Expected found and unmarshaled users to be the same")
+	}
+
+	if !strings.Contains(w.Body.String(), "\"name\":\"Luke Skywalker\",\"email\":\"luke@skywalker.com\"") {
+		t.Errorf("Expected body to be json got %s", w.Body.String())
+	}
+
+	db.Delete(&userFromDb)
+}
+
+func Test_UserGetRouteWhenIdIncorrect(t *testing.T) {
+	router := setupRouter()
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/users/luke", nil)
+	router.ServeHTTP(w, req)
+
+	if w.Code != 400 {
+		t.Errorf("Expected code 400 got %d", w.Code)
+	}
+
+	if !strings.HasPrefix(w.Body.String(), "{\"error\":") {
+		t.Error("Expected body to be have error json")
+	}
 }
