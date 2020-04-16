@@ -56,3 +56,21 @@ func UpdateUser(c *gin.Context) {
 	user.Update()
 	c.JSON(http.StatusOK, user)
 }
+
+// DeleteUser handles HTTP DELETE request to find and delete User record
+func DeleteUser(c *gin.Context) {
+	idParam := c.Param("id")
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	user := models.FindUserByID(id)
+	if user.ID == 0 {
+		c.JSON(http.StatusNotFound, gin.H{})
+		return
+	}
+
+	user.Delete()
+	c.JSON(http.StatusOK, gin.H{})
+}

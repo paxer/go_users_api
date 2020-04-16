@@ -47,3 +47,8 @@ func (u *User) Create() {
 func (u *User) Update() {
 	DB.Model(&u).Updates(User{Name: u.Name, Email: u.Email})
 }
+
+// Delete deletes User record in the database
+func (u *User) Delete() {
+	DB.Delete(&u)
+}
